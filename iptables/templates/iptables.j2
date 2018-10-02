@@ -27,6 +27,7 @@ COMMIT
 :INPUT DROP
 
 {# Common rules #}
+-A INPUT -i lo -j ACCEPT
 -A INPUT -p tcp -m tcp --dport 22 -j ACCEPT
 
 :SYN_FLOOD -
