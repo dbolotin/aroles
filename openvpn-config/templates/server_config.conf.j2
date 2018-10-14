@@ -38,6 +38,11 @@ ifconfig-pool-persist {{ name }}-ifconfig-persist {{ pool_persist_timeout }}
 push "redirect-gateway def1"
 {% endif %}
 
+{% if client_to_client %}
+client-to-client
+{% endif %}
+
+
 push "route-gateway {{ (net_with_prefix | ipaddr(ip_offset) | ipaddr('address')) if net_with_prefix is defined else ip }}"
 
 # Disable Negotiable Crypto Parameters (NCP)

@@ -10,3 +10,5 @@ no_service: no
 config_path: /etc/openvpn/
 owner: root
 group: root
+extension: conf
+client_to_client: no

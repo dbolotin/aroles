@@ -29,7 +29,7 @@
 - name: Creating openvpn config
   template:
     src: "{{ type }}_config.conf.j2"
-    dest: "{{ config_path }}/{{ name }}.conf"
+    dest: "{{ config_path }}/{{ name }}.{{ extension }}"
     owner: "{{ owner }}"
     group: "{{ group }}"
     mode: 0600
