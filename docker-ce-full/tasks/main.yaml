@@ -13,7 +13,7 @@
       - ca-certificates
       - curl
       - software-properties-common
-  when: is_ubuntu
+  when: is_debian_or_ubuntu
 
 - name: Setting configs for CentOS
   set_fact:
@@ -50,8 +50,12 @@
 - include: ubuntu.yaml
   when: is_ubuntu
 
+- include: debian.yaml
+  when: is_debian
+
 - name: Install Docker CE
   package:
+    update_cache: yes
     name: docker-ce
     state: present
 
@@ -62,22 +66,22 @@
     enabled: yes
 
 - block:
-  - name: Ensure Pip is installed.
-    package:
-      name:
-        - python3-pip
-        - python3-pkg-resources
-        - python3-setuptools
-      state: present
+    - name: Ensure Pip is installed.
+      package:
+        name:
+          - python3-pip
+          - python3-pkg-resources
+          - python3-setuptools
+        state: present
 
-  - name: Upgrading pip
-    pip:
-      name: pip
-      state: latest
+    - name: Upgrading pip
+      pip:
+        name: pip
+        state: latest
 
-  - name: Installing latest python docker binding
-    pip:
-      name: docker-compose
-      state: latest
+    - name: Installing latest python docker binding
+      pip:
+        name: docker-compose
+        state: latest
 
-  when: is_ubuntu
+  when: is_debian_or_ubuntu
