@@ -12,3 +12,4 @@ owner: root
 group: root
 extension: conf
 client_to_client: no
+embed_keys: yes

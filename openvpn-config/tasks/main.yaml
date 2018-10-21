@@ -26,6 +26,62 @@
     ta_key: "{{ lookup('file', openvpn_pki_folder + '/ta.key') }}"
   when: tls_auth
 
+- when: not embed_keys
+  block:
+    - name: Calculating files to copy (1)
+      set_fact:
+        files_to_copy:
+          - from: "{{ openvpn_pki_folder }}/pki/private/{{ name }}.key"
+            to: "{{ name }}.key"
+          - from: "{{ openvpn_pki_folder }}/pki/issued/{{ name }}.crt"
+            to: "{{ name }}.crt"
+          - from: "{{ openvpn_pki_folder }}/pki/ca.crt"
+            to: "ca.crt"
+
+    - name: Calculating files to copy (2)
+      set_fact:
+        files_to_copy_dh:
+          - from: "{{ openvpn_pki_folder }}/pki/dh.pem"
+            to: "dh.pem"
+      when: "type == 'server'"
+
+    - name: Calculating files to copy (3)
+      set_fact:
+        files_to_copy: "{{ files_to_copy }} + {{ files_to_copy_dh }}"
+      when: "type == 'server'"
+
+    - name: Calculating files to copy (4)
+      set_fact:
+        files_to_copy_ta:
+          - from: "{{ openvpn_pki_folder }}/ta.key"
+            to: "ta.key"
+      when: tls_auth
+
+    - name: Calculating files to copy (5)
+      set_fact:
+        files_to_copy: "{{ files_to_copy }} + {{ files_to_copy_ta }}"
+      when: tls_auth
+
+    - name: Creating key-file directory
+      file:
+        path:  "{{ config_path }}/{{ name }}.files"
+        owner: "{{ owner }}"
+        group: "{{ group }}"
+        mode: 0700
+        state: directory
+
+    - name: Copying key files
+      copy:
+        dest: "{{ config_path }}/{{ name }}.files/{{ file_to_copy.to }}"
+        owner: "{{ owner }}"
+        group: "{{ group }}"
+        mode: 0700
+        src: "{{ file_to_copy.from }}"
+      with_items: "{{ files_to_copy }}"
+      loop_control:
+        loop_var: file_to_copy
+      notify: restart openvpn
+
 - name: Creating openvpn config
   template:
     src: "{{ type }}_config.conf.j2"
@@ -41,7 +97,7 @@
     owner: "{{ owner }}"
     group: "{{ group }}"
     mode: 0700
-    content: "{{up_script}}"
+    content: "{{ up_script }}"
   when: up_script is defined
   notify: restart openvpn
 
@@ -51,7 +107,7 @@
     owner: "{{ owner }}"
     group: "{{ group }}"
     mode: 0700
-    content: "{{down_script}}"
+    content: "{{ down_script }}"
   when: down_script is defined
   notify: restart openvpn
 

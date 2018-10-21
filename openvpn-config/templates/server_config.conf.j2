@@ -113,6 +113,8 @@ log-append /var/log/openvpn-{{ name }}.log
 
 verb 3
 
+{% if embed_keys %}
+
 <ca>
 {{ ca_crt }}
 </ca>
@@ -125,7 +127,7 @@ verb 3
 {{ config_key }}
 </key>
 
-{% if ta_key is defined %}
+{% if tls_auth %}
 <tls-auth>
 {{ ta_key }}
 </tls-auth>
@@ -134,3 +136,19 @@ verb 3
 <dh>
 {{ dh }}
 </dh>
+
+{% else %}
+
+ca {{ name }}.files/ca.crt
+
+cert {{ name }}.files/{{ name }}.crt
+
+key {{ name }}.files/{{ name }}.key
+
+{% if tls_auth %}
+tls-auth {{ name }}.files/ta.key
+{% endif %}
+
+dh {{ name }}.files/dh.pem
+
+{% endif %}
