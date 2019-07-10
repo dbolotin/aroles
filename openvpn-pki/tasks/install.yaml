@@ -1,0 +1,29 @@
+---
+- debug: 
+    msg: "{{ easyrsa_install_dir }}"
+
+- name: "Create easyrsa dir"
+  become: yes
+  file:
+    path: "{{ easyrsa_install_dir }}"
+    mode: 0700
+    state: directory
+  when: is_easyrsa_exists.stat.exists and is_easyrsa_exists.stat.isdir
+
+  #- name: "Install modern 3.x easyrsa"
+  #  become: yes
+  #  get_url:
+  #    url: "{{ easyrsa_download_url }}"
+  #    dest: "{{ openvpn_pki_folder }}/easyrsa/{{ easyrsa_archivename }}"
+  #  tags: [never, install]
+
+- name: "Check easyrsa directory exists "
+  stat:
+    path: "{{ easyrsa_install_dir }}"
+  register: is_easyrsa_exists 
+
+- name: "Download and extract modern 3.x easyrsa"
+  unarchive:
+    remote_src: yes
+    src: "{{ easyrsa_download_url }}"
+    dest: "{{ easyrsa_install_dir }}"

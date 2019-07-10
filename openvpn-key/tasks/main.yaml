@@ -1,6 +1,6 @@
 ---
 - name: PKI
-  import_role:
+  include_role:
     name: openvpn-pki
 
 - name: "Creating {{ type }} keys for common name {{ name }} (ON LOCALHOST)"

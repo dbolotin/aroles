@@ -1,4 +1,7 @@
 ---
+- name: "Install OpenVPN modern 3.x easyrsa"
+  include: install.yaml
+
 - name: "Creating folder for OpenVPN PKI"
   file:
     path: "{{ openvpn_pki_folder }}"

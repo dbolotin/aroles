@@ -1,11 +1,11 @@
 ---
-- name: Checking openvpn installed
+- name: "{{ name }}. Checking openvpn installed"
   package:
     name: openvpn
     state: present
 
-- name: Creating keys
-  import_role:
+- name: "{{ name }}. Creating keys"
+  include_role:
     name: openvpn-key
 
 # Workaround for strange handler variable visibility
@@ -14,19 +14,22 @@
     openvpn_service_name: "{{ name }}"
     openvpn_no_service: "{{ no_service }}"
 
-- name: Reading keys and certificates
+- name: "{{ name }}. Reading keys and certificates"
   set_fact:
     config_key: "{{ lookup('file', openvpn_pki_folder + '/pki/private/' + name + '.key' ) }}"
     config_crt: "{{ lookup('file', openvpn_pki_folder + '/pki/issued/' + name + '.crt' ) }}"
     ca_crt: "{{ lookup('file', openvpn_pki_folder + '/pki/ca.crt') }}"
     dh: "{{ lookup('file', openvpn_pki_folder + '/pki/dh.pem') }}"
 
-- name: Reading ta_key
+- name: "{{ name }}. Reading ta_key"
   set_fact:
     ta_key: "{{ lookup('file', openvpn_pki_folder + '/ta.key') }}"
   when: tls_auth
 
-- name: Creating openvpn config
+- debug:
+    msg: "Config type is: {{ type }}"
+
+- name: "{{ name }}. Creating openvpn config"
   template:
     src: "{{ type }}_config.conf.j2"
     dest: "{{ config_path }}/{{ name }}.conf"
@@ -35,7 +38,7 @@
     mode: 0600
   notify: restart openvpn
 
-- name: Creating up script files
+- name: "{{ name }}. Creating up script files"
   copy:
     dest: "{{ config_path }}/{{ name }}-up.sh"
     owner: "{{ owner }}"
@@ -45,7 +48,7 @@
   when: up_script is defined
   notify: restart openvpn
 
-- name: Creating down script files
+- name: "{{ name }}. Creating down script files"
   copy:
     dest: "{{ config_path }}/{{ name }}-down.sh"
     owner: "{{ owner }}"
@@ -55,7 +58,7 @@
   when: down_script is defined
   notify: restart openvpn
 
-- name: Creating client-config directory for server config
+- name: "{{ name }}. Creating client-config directory for server config"
   block:
     - name: Creating folder
       file:
@@ -78,7 +81,7 @@
       notify: restart openvpn
   when: type == "server" and clients is defined
 
-- name: Allow OpenVPN to listen on
+- name: "{{ name }}. Allow OpenVPN to listen on"
   seport:
     ports: "{{ se_port }}"
     proto: "{{ se_proto }}"
@@ -90,13 +93,13 @@
 
 - meta: flush_handlers
 
-- name: Start OpenVPN
+- name: "{{ name }}. Start OpenVPN"
   service:
     name: "openvpn@{{ name }}"
     state: started
   when: not no_service
 
-- name: Enabling OpenVPN connection
+- name: "{{ name }}. Enabling OpenVPN connection"
   command: "systemctl enable openvpn@{{ name }}"
   changed_when: false
   when: not no_service
