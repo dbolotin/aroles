@@ -1,0 +1,35 @@
+---
+# config
+openvpn_default_config:
+# общие параметры конфигурации, актуальные как для клиента, так и для сервера
+  common:
+    keepalive:
+      ping: 10
+      timeout: 120
+    cipher: AES-128-GCM
+    pool_persist_timeout: 172800
+    device:
+      type: tun
+    tls_auth: yes
+    push_def1: no
+    no_service: no
+    config_path: /etc/openvpn
+    owner: root
+    group: root
+    proto: tcp
+
+# управляющий хост, генерящий все ключи
+  manager:
+    host: "localhost"
+    #easyrsa configuration
+    easyrsa:
+      version:  "3.0.6"
+      archivename: "EasyRSA-unix-v{{ openvpn_default_config.manager.easyrsa.version }}.tgz"
+      download_url: "https://github.com/OpenVPN/easy-rsa/releases/download/v{{ openvpn_default_config.manager.easyrsa.version }}/{{ openvpn_default_config.manager.easyrsa.archivename }}"
+      install_dir: "{{ openvpn_default_config.common.config_path }}/easyrsa"
+
+# настройки клиентов по-умолчанию
+  client:
+
+# настройки серверов по-умолчанию
+  server:
