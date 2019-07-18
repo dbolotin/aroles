@@ -1,59 +1,67 @@
 ---
 # Workaround for strange handler variable visibility
+- name: Get actual values of some variables
+  set_fact:
+    no_service: "{{ data.no_service | default(_ovpn_config.common.no_service) }}"
+    name: "{{ data.name }}"
+    config_path: "{{ data.config_path | default(_ovpn_config.common.config_path) }}"
+    owner: "{{ data.owner | default(_ovpn_config.common.owner) }}"
+    group: "{{ data.group | default(_ovpn_config.common.group) }}"
+
 - name: Saving config name for handler
   set_fact:
-    openvpn_service_name: "{{ ovpn_login }}"
+    openvpn_service_name: "{{ name }}"
     openvpn_no_service: "{{ no_service }}"
 
-- name: "{{ ovpn_login }}. Reading keys and certificates"
+- name: "{{ name }}. Reading keys and certificates"
   set_fact:
-    config_key: "{{ lookup('file', openvpn_pki_folder + '/pki/private/' + name + '.key' ) }}"
-    config_crt: "{{ lookup('file', openvpn_pki_folder + '/pki/issued/' + name + '.crt' ) }}"
-    ca_crt: "{{ lookup('file', openvpn_pki_folder + '/pki/ca.crt') }}"
-    dh: "{{ lookup('file', openvpn_pki_folder + '/pki/dh.pem') }}"
+    config_key: "{{ lookup('file', _ovpn_config.manager.pki_folder + '/pki/private/' + name + '.key' ) }}"
+    config_crt: "{{ lookup('file', _ovpn_config.manager.pki_folder + '/pki/issued/' + name + '.crt' ) }}"
+    ca_crt: "{{ lookup('file', _ovpn_config.manager.pki_folder + '/pki/ca.crt') }}"
+    dh: "{{ lookup('file', _ovpn_config.manager.pki_folder + '/pki/dh.pem') }}"
 
-- name: "{{ ovpn_login }}. Reading ta_key"
+- name: "{{ name }}. Reading ta_key"
   set_fact:
-    ta_key: "{{ lookup('file', openvpn_pki_folder + '/ta.key') }}"
+    ta_key: "{{ lookup('file', _ovpn_config.manager.pki_folder + '/ta.key') }}"
   when: tls_auth
 
 - debug:
     msg: "Config type is: {{ type }}"
 
-- name: "{{ ovpn_login }}. Creating openvpn config"
+- name: "{{ name }}. Creating openvpn config"
   template:
     src: "{{ type }}_config.conf.j2"
-    dest: "{{ config_path }}/{{ ovpn_login }}.conf"
+    dest: "{{ config_path }}/{{ name }}.conf"
     owner: "{{ owner }}"
     group: "{{ group }}"
     mode: 0600
   notify: restart openvpn
 
-- name: "{{ ovpn_login }}. Creating up script files"
+- name: "{{ name }}. Creating up script files"
   copy:
-    dest: "{{ config_path }}/{{ ovpn_login }}-up.sh"
+    dest: "{{ config_path }}/{{ name }}-up.sh"
     owner: "{{ owner }}"
     group: "{{ group }}"
     mode: 0700
-    content: "{{up_script}}"
-  when: up_script is defined
+    content: "{{ data.up_script }}"
+  when: data.up_script is defined
   notify: restart openvpn
 
-- name: "{{ ovpn_login }}. Creating down script files"
+- name: "{{ name }}. Creating down script files"
   copy:
-    dest: "{{ config_path }}/{{ ovpn_login }}-down.sh"
+    dest: "{{ config_path }}/{{ name }}-down.sh"
     owner: "{{ owner }}"
     group: "{{ group }}"
     mode: 0700
-    content: "{{down_script}}"
-  when: down_script is defined
+    content: "{{ data.down_script }}"
+  when: data.down_script is defined
   notify: restart openvpn
 
-- name: "{{ ovpn_login }}. Creating client-config directory for server config"
+- name: "{{ name }}. Creating client-config directory for server config"
   block:
     - name: Creating folder
       file:
-        path: "{{ config_path }}/{{ ovpn_login }}-ccd"
+        path: "{{ config_path }}/{{ name }}-ccd"
         state: directory
         owner: "{{ owner }}"
         group: "{{ group }}"
@@ -62,35 +70,36 @@
     - name: Creating client configs
       template:
         src: "ccd.j2"
-        dest: "{{ config_path }}/{{ ovpn_login }}-ccd/{{ client.name }}"
+        dest: "{{ config_path }}/{{ name }}-ccd/{{ client.name }}"
         owner: "{{ owner }}"
         group: "{{ group }}"
         mode: 0600
-      with_items: "{{ clients }}"
+      with_items: "{{ data.clients }}"
       loop_control:
         loop_var: client
       notify: restart openvpn
-  when: type == "server" and clients is defined
+  when: type == "server" and data.clients is defined
 
-- name: "{{ ovpn_login }}. Allow OpenVPN to listen on"
+- name: "{{ name }}. Allow OpenVPN to listen on"
   seport:
-    ports: "{{ se_port }}"
-    proto: "{{ se_proto }}"
+    ports: "{{ data.se_port }}"
+    proto: "{{ data.se_proto }}"
     setype: openvpn_port_t
     state: present
-  when: se_port is defined and se_proto is defined
+  when: data.se_port is defined and data.se_proto is defined
   notify:
     - restart openvpn
 
 - meta: flush_handlers
 
-- name: "{{ ovpn_login }}. Start OpenVPN"
-  service:
-    name: "openvpn@{{ ovpn_login }}"
+- name: "{{ name }}. Start OpenVPN"
+  systemd:
+    name: "openvpn@{{ name }}"
     state: started
   when: not no_service
 
-- name: "{{ ovpn_login }}. Enabling OpenVPN connection"
-  command: "systemctl enable openvpn@{{ ovpn_login }}"
-  changed_when: false
+- name: "{{ name }}. Enabling OpenVPN connection"
+  systemd:
+    name: "openvpn@{{ name }}"
+    enabled: yes
   when: not no_service

@@ -42,14 +42,37 @@
 #    - debug:
 #        msg: "{{ _ovpn_config }}"
 
-- name: "Install OpenVPN and EasyRSA 3.x and configure it"
 - include_tasks: 'install.yaml'
-	tags: [ 'never', 'install' ]
+  tags: [ 'never', 'install' ]
 
-#- name: "{{ name }}. Creating keys"
-#- include_tasks: 'key.yaml' 
+- name: "Generating keys"
+  block:
+    - include_tasks: 'key-generate.yaml'
+      vars:
+        type:  'client'
+        values: '{{ _ovpn_config.clientsof }}'
+      when: _ovpn_config.clientsof is defined and _ovpn_config.clientsof != []
+    - include_tasks: 'key-generate.yaml'
+      vars:
+        type:  'server'
+        values: '{{ _ovpn_config.servers }}'
+      when: _ovpn_config.servers is defined and _ovpn_config.servers != []
 
-# configure
-#- include_tasks: 'config.yaml'
-# generate pki
-#- include_tasks: 'key.yaml'
+  delegate_to: "{{ _ovpn_config.manager.host }}"
+  become: no
+
+- name: "Configuring clients and servers"
+  block:
+    - include_tasks: 'config.yaml'
+      with_items: _ovpn_config.clientsof
+      vars:
+        type:  'client'
+        data: '{{ item }}'
+      when: _ovpn_config.clientsof is defined and _ovpn_config.clientsof != []
+
+    - include_tasks: 'config.yaml'
+      with_items: _ovpn_config.servers
+      vars:
+        type:  'server'
+        data: '{{ item }}'
+      when: _ovpn_config.servers is defined and _ovpn_config.servers != []

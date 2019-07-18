@@ -1,0 +1,7 @@
+---
+- name: "Creating {{ type }} keys (ON MANAGER: {{ _ovpn_config.manager.host }})"
+  command: "easyrsa build-{{ type }}-full {{ item.name }} nopass"
+  args:
+    chdir: "{{ _ovpn_config.manager.pki_folder }}"
+    creates: "{{ openvpn_pki_folder }}/pki/private/{{ item.name }}.key"
+  with_items: "{{ values }}"

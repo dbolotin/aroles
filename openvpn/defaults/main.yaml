@@ -18,7 +18,7 @@ openvpn_defaults:
     # default protocol wich used for any client or server while redefined in the host_vars or anything else
     proto: tcp
 
-# управляющий хост, генерящий все ключи
+# управляющий хост, генерящий и хранящий все ключи
   manager:
     pki_folder: ~/openvpn
     host: "localhost"
@@ -29,13 +29,16 @@ openvpn_defaults:
       #install_dir in the main task
       #download_url in the main task
 
-# настройки клиентов по-умолчанию
+# настройки клиентов 
 # может быть клиентом к нескольким серверам
   clientof:
-    # hostname.one:
-    # hostname.two:
-    # hostname.three:
-    # etc...
+#    - login: 'int-vps0-v-sandbox-cl'
+#     dev: 'ovpn-int-vps0'
+#     host: 'vps0.cdr3.net'
+#     proto: 'udp'
+#     port: "{{ hostvars['vps0.cdr3.net'].ports.udp.vpn_int }}"
 
-# настройки серверов по-умолчанию
-  server:
+
+# настройки серверов
+# можно настроить несколько серверов
+  servers:
