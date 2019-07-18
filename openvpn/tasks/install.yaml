@@ -48,16 +48,5 @@
 
     - include_tasks: 'pki-config.yaml'
 
-    - include_tasks: 'key-generate.yaml'
-      vars:
-        type:  'client'
-        values: '{{ _ovpn_config.clientsof }}'
-      when: _ovpn_config.clientsof is defined and _ovpn_config.clientsof != []
-    - include_tasks: 'key-generate.yaml'
-      vars:
-        type:  'server'
-        values: '{{ _ovpn_config.servers }}'
-      when: _ovpn_config.servers is defined and _ovpn_config.servers != []
-
   delegate_to: "{{ _ovpn_config.manager.host }}"
   become: no

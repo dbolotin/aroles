@@ -20,7 +20,7 @@ openvpn_defaults:
 
 # управляющий хост, генерящий и хранящий все ключи
   manager:
-    pki_folder: ~/openvpn
+    pki_folder: "~/openvpn"
     host: "localhost"
     #easyrsa configuration
     easyrsa:

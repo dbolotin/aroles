@@ -1,9 +1,6 @@
 ---
-- debug:
-    msg: "type: {{ type }}, data: {{ data }}"
-
-#- name: "Creating {{ type }} keys (ON MANAGER: {{ _ovpn_config.manager.host }})"
-#  command: "easyrsa build-{{ type }}-full {{ data.name }} nopass"
-#  args:
-#    chdir: "{{ _ovpn_config.manager.pki_folder }}"
-#    creates: "{{ openvpn_pki_folder }}/pki/private/{{ data.name }}.key"
+- name: "Creating {{ type }} keys (ON MANAGER: {{ _ovpn_config.manager.host }})"
+  command: "easyrsa build-{{ type }}-full {{ data.name }} nopass"
+  args:
+    chdir: "{{ _ovpn_config.manager.pki_folder }}"
+    creates: "{{ openvpn_pki_folder }}/pki/private/{{ data.name }}.key"
