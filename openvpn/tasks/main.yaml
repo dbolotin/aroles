@@ -1,0 +1,55 @@
+---
+
+#  manager:
+#    host: "localhost"
+#    #easyrsa configuration
+#    easyrsa:
+#      version:  "3.0.6"
+#      archivename: "EasyRSA-unix-v{{ openvpn_default_config.manager.easyrsa.version }}.tgz"
+#      download_url: "https://github.com/OpenVPN/easy-rsa/releases/download/v{{ openvpn_default_config.manager.easyrsa.version }}/{{ openvpn_default_config.manager.easyrsa.archivename }}"
+#      install_dir: "{{ openvpn_default_config.common.config_path }}/easyrsa"
+
+# setting data for operation config
+- set_fact:
+    _ovpn_config: "{{ openvpn_defaults }}"
+
+- debug:
+    msg: "{{ _ovpn_config }}"
+
+- set_fact:
+    _ovpn_config: "{{ _ovpn_config | combine(openvpn, recursive=True) }}"
+  when: openvpn is defined
+
+# prepare data. do not try to use just one set_fact
+- set_fact:
+    _tmp_archivename: "EasyRSA-unix-v{{ _ovpn_config.manager.easyrsa.version }}.tgz"
+    _tmp_install_dir: "{{ _ovpn_config.common.config_path }}/easyrsa"
+- set_fact:
+    _tmp_download_url: "https://github.com/OpenVPN/easy-rsa/releases/download/v{{ _ovpn_config.manager.easyrsa.version }}/{{ _tmp_archivename }}"
+- set_fact:
+    _ovpn_config: "{{ _ovpn_config | combine( { 'manager': { 'easyrsa': { 'archivename': _tmp_archivename, 'install_dir': _tmp_install_dir, 'download_url': _tmp_download_url }}}, recursive=True ) }}"
+
+- debug:
+    msg: "{{ _ovpn_config }}"
+
+#- name: "Backward compatibility"
+#  block:
+#    #  - set_fact:
+#    #      _ovpn_config: "{{ _ovpn_config. | combine  }} :{{ name }}"
+#    #    when: not ovpn.login defined
+#    #
+#    #  -set
+#    - debug:
+#        msg: "{{ _ovpn_config }}"
+
+- name: "Install OpenVPN and EasyRSA 3.x and configure it"
+- include_tasks: 'install.yaml'
+	tags: [ 'never', 'install' ]
+
+#- name: "{{ name }}. Creating keys"
+#- include_tasks: 'key.yaml' 
+
+# configure
+#- include_tasks: 'config.yaml'
+# generate pki
+#- include_tasks: 'key.yaml'

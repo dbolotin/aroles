@@ -1,7 +1,7 @@
 ---
 - name: PKI
-  include_role:
-    name: openvpn-pki
+  include_tasks:
+    name: 'pki.yaml'
 
 - name: "Creating {{ type }} keys for common name {{ name }} (ON LOCALHOST)"
   command: "easyrsa build-{{ type }}-full {{ name }} nopass"

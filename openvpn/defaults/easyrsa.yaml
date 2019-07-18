@@ -1,5 +1,0 @@
----
-easyrsa_version:  "3.0.6"
-easyrsa_archivename: "EasyRSA-unix-v{{ easyrsa_version }}.tgz"
-easyrsa_download_url: "https://github.com/OpenVPN/easy-rsa/releases/download/v{{ easyrsa_version }}/{{ easyrsa_archivename }}"
-easyrsa_install_dir: "{{ openvpn_pki_folder }}/easyrsa"

@@ -1,6 +1,5 @@
 ---
-# config
-openvpn_default_config:
+openvpn_defaults:
 # общие параметры конфигурации, актуальные как для клиента, так и для сервера
   common:
     keepalive:
@@ -16,20 +15,27 @@ openvpn_default_config:
     config_path: /etc/openvpn
     owner: root
     group: root
+    # default protocol wich used for any client or server while redefined in the host_vars or anything else
     proto: tcp
 
 # управляющий хост, генерящий все ключи
   manager:
+    pki_folder: ~/openvpn
     host: "localhost"
     #easyrsa configuration
     easyrsa:
       version:  "3.0.6"
-      archivename: "EasyRSA-unix-v{{ openvpn_default_config.manager.easyrsa.version }}.tgz"
-      download_url: "https://github.com/OpenVPN/easy-rsa/releases/download/v{{ openvpn_default_config.manager.easyrsa.version }}/{{ openvpn_default_config.manager.easyrsa.archivename }}"
-      install_dir: "{{ openvpn_default_config.common.config_path }}/easyrsa"
+      #archivename set in the main task
+      #install_dir in the main task
+      #download_url in the main task
 
 # настройки клиентов по-умолчанию
-  client:
+# может быть клиентом к нескольким серверам
+  clientof:
+    # hostname.one:
+    # hostname.two:
+    # hostname.three:
+    # etc...
 
 # настройки серверов по-умолчанию
   server:

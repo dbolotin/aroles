@@ -1,0 +1,30 @@
+---
+- name: "Creating folder for OpenVPN PKI (ON MANAGER: {{ _ovpn_config.manager.host }})"
+  file:
+    path: "{{ _ovpn_config.manager.pki_folder }}"
+    state: directory
+    mode: 0700
+
+- name: "Creating ta.key (ON MANAGER: {{ _ovpn_config.manager.host }})"
+  command: "openvpn --genkey --secret ta.key"
+  args:
+    chdir: "{{ _ovpn_config.manager.pki_folder }}"
+    creates: "{{ _ovpn_config.manager.pki_folder }}/ta.key"
+
+- name: "Init PKI (ON MANAGER: {{ _ovpn_config.manager.host }})"
+  command: "easyrsa init-pki"
+  args:
+    chdir: "{{ _ovpn_config.manager.pki_folder }}"
+    creates: "{{ _ovpn_config.manager.pki_folder }}/pki"
+
+- name: "Building CA (ON MANAGER: {{ _ovpn_config.manager.host }})"
+  command: "easyrsa --batch build-ca nopass"
+  args:
+    chdir: "{{ _ovpn_config.manager.pki_folder }}"
+    creates: "{{ _ovpn_config.manager.pki_folder }}/pki/ca.crt"
+
+- name: "Creating dh.pem [this may take several minutes] (ON MANAGER: {{ _ovpn_config.manager.host }})"
+  command: "easyrsa gen-dh"
+  args:
+    chdir: "{{ _ovpn_config.manager.pki_folder }}"
+    creates: "{{ _ovpn_config.manager.pki_folder }}/pki/dh.pem"
