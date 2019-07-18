@@ -7,6 +7,11 @@
     config_path: "{{ data.config_path | default(_ovpn_config.common.config_path) }}"
     owner: "{{ data.owner | default(_ovpn_config.common.owner) }}"
     group: "{{ data.group | default(_ovpn_config.common.group) }}"
+    proto: "{{ data.proto | default(_ovpn_config.common.proto) }}"
+    device_type: "{{ data.device.type | default(_ovpn_config.common.device.type) }}"
+    host:  "{{ data.host }}"
+    port:  "{{ data.port }}"
+    cipher: "{{ data.cipher | default(_ovpn_config.common.cipher) }}"
 
 - name: Saving config name for handler
   set_fact:
@@ -23,7 +28,7 @@
 - name: "{{ name }}. Reading ta_key"
   set_fact:
     ta_key: "{{ lookup('file', _ovpn_config.manager.pki_folder + '/ta.key') }}"
-  when: tls_auth
+  when: _ovpn_config.common.tls_auth
 
 - debug:
     msg: "Config type is: {{ type }}"
