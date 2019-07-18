@@ -48,31 +48,33 @@
 - name: "Generating keys"
   block:
     - include_tasks: 'key-generate.yaml'
+      with_items: "{{ _ovpn_config.clientsof }}"
       vars:
         type:  'client'
-        values: '{{ _ovpn_config.clientsof }}'
+        data: '{{ item }}'
       when: _ovpn_config.clientsof is defined and _ovpn_config.clientsof != []
     - include_tasks: 'key-generate.yaml'
+      with_items: "{{ _ovpn_config.servers }}"
       vars:
         type:  'server'
-        values: '{{ _ovpn_config.servers }}'
+        data: '{{ item }}'
       when: _ovpn_config.servers is defined and _ovpn_config.servers != []
 
   delegate_to: "{{ _ovpn_config.manager.host }}"
   become: no
 
-- name: "Configuring clients and servers"
-  block:
-    - include_tasks: 'config.yaml'
-      with_items: _ovpn_config.clientsof
-      vars:
-        type:  'client'
-        data: '{{ item }}'
-      when: _ovpn_config.clientsof is defined and _ovpn_config.clientsof != []
-
-    - include_tasks: 'config.yaml'
-      with_items: _ovpn_config.servers
-      vars:
-        type:  'server'
-        data: '{{ item }}'
-      when: _ovpn_config.servers is defined and _ovpn_config.servers != []
+#- name: "Configuring clients and servers"
+#  block:
+#    - include_tasks: 'config.yaml'
+#      with_items: _ovpn_config.clientsof
+#      vars:
+#        type:  'client'
+#        data: '{{ item }}'
+#      when: _ovpn_config.clientsof is defined and _ovpn_config.clientsof != []
+#
+#    - include_tasks: 'config.yaml'
+#      with_items: _ovpn_config.servers
+#      vars:
+#        type:  'server'
+#        data: '{{ item }}'
+#      when: _ovpn_config.servers is defined and _ovpn_config.servers != []
