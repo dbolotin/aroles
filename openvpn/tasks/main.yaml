@@ -1,11 +1,10 @@
----
 - name: Checking openvpn installed
   package:
     name: openvpn
     state: present
 
 - name: Creating keys
-  import_role:
+  include_file:
     name: openvpn-key
 
 # Workaround for strange handler variable visibility

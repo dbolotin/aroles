@@ -1,8 +1,4 @@
 ---
-- name: PKI
-  import_role:
-    name: openvpn-pki
-
 - name: "Creating {{ type }} keys for common name {{ name }} (ON LOCALHOST)"
   command: "easyrsa build-{{ type }}-full {{ name }} nopass"
   args:

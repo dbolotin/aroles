@@ -1,0 +1,29 @@
+---
+# Defines Ansible host to store PKI on
+pki_host: localhost
+# Should we generate keys with "sudo"
+pki_become: no
+
+# OpenVPN config
+keepalive_ping: 10
+keepalive_timeout: 120
+cipher: AES-128-GCM
+pool_persist_timeout: 172800
+device_type: tun
+tls_auth: yes
+push_def1: no
+client_to_client: no
+
+# Output config settings
+config_path: /etc/openvpn/
+owner: root
+group: root
+
+# Config file extension (file name suffix)
+extension: conf
+
+# Where to embed keys inside config file, or store it as separate set ofg files
+embed_keys: yes
+
+# Whether to create, start and enable corresponding system service
+no_service: no
