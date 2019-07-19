@@ -1,29 +1,51 @@
 ---
+
+# Required Variables
+
+# Folder on {{ openvpn_pki_host }}
+# openvpn_pki_folder: ...
+
+# Config and key id / name
+# openvpn_id: ...
+
+# openvpn_type: [ server | client ]
+
+# command to execute on connect and disconnect (contents of script file)
+# openvpn_up_script:
+# openvpn_down_script:
+
+# Optional vars
+
+# Path to easyrsa executable on {{ openvpn_pki_host }}, if not specified will be installed automatically
+# openvpn_easyrsa:
+
 # Defines Ansible host to store PKI on
-pki_host: localhost
+openvpn_pki_host: localhost
 # Should we generate keys with "sudo"
-pki_become: no
+openvpn_pki_become: no
+
+openvpn_easyrsa_version:  "3.0.7"
 
 # OpenVPN config
-keepalive_ping: 10
-keepalive_timeout: 120
-cipher: AES-128-GCM
-pool_persist_timeout: 172800
-device_type: tun
-tls_auth: yes
-push_def1: no
-client_to_client: no
+openvpn_keepalive_ping: 10
+openvpn_keepalive_timeout: 120
+openvpn_cipher: AES-128-GCM
+openvpn_pool_persist_timeout: 172800
+openvpn_device_type: tun
+openvpn_tls_auth: yes
+openvpn_push_def1: no
+openvpn_client_to_client: no
 
 # Output config settings
-config_path: /etc/openvpn/
-owner: root
-group: root
+openvpn_config_path: /etc/openvpn/
+openvpn_owner: root
+openvpn_group: root
 
 # Config file extension (file name suffix)
-extension: conf
+openvpn_extension: conf
 
 # Where to embed keys inside config file, or store it as separate set ofg files
-embed_keys: yes
+openvpn_embed_keys: yes
 
-# Whether to create, start and enable corresponding system service
-no_service: no
+# Whether to create, start and enable corresponding systemd service
+openvpn_service: yes

@@ -1,13 +1,13 @@
-proto {{ proto }}
+proto {{ openvpn_proto }}
 
-{% if dev is defined %}
-dev {{ dev }}
+{% if openvpn_dev is defined %}
+dev {{ openvpn_dev }}
 {% else %}
-dev {{ device_type }}
+dev {{ openvpn_device_type }}
 {% endif %}
-dev-type {{ device_type }}
+dev-type {{ openvpn_device_type }}
 
-remote {{ host }} {{ port }}
+remote {{ openvpn_host }} {{ openvpn_port }}
 
 resolv-retry infinite
 
@@ -22,22 +22,22 @@ ncp-disable
 persist-key
 persist-tun
 
-cipher {{ cipher }}
+cipher {{ openvpn_cipher }}
 
-{% if up_script is defined or down_script is defined %}
+{% if openvpn_up_script is defined or openvpn_down_script is defined %}
 script-security 2
 {% endif %}
 
-{% if up_script is defined %}
-up ./{{ name }}-up.sh
+{% if openvpn_up_script is defined %}
+up ./{{ openvpn_id }}-up.sh
 {% endif %}
 
-{% if down_script is defined %}
-down ./{{ name }}-down.sh
+{% if openvpn_down_script is defined %}
+down ./{{ openvpn_id }}-down.sh
 {% endif %}
 
-status /var/log/openvpn-{{ name }}.status
-log-append /var/log/openvpn-{{ name }}.log
+status /var/log/openvpn-{{ openvpn_id }}.status
+log-append /var/log/openvpn-{{ openvpn_id }}.log
 
 verb 3
 
@@ -55,7 +55,7 @@ verb 3
 {{ config_key }}
 </key>
 
-{% if tls_auth %}
+{% if openvpn_tls_auth %}
 <tls-auth>
 {{ ta_key }}
 </tls-auth>
@@ -63,14 +63,12 @@ verb 3
 
 {% else %}
 
-ca {{ name }}.files/ca.crt
+ca {{ openvpn_id }}.files/ca.crt
+cert {{ openvpn_id }}.files/{{ openvpn_id }}.crt
+key {{ openvpn_id }}.files/{{ openvpn_id }}.key
 
-cert {{ name }}.files/{{ name }}.crt
-
-key {{ name }}.files/{{ name }}.key
-
-{% if tls_auth %}
-tls-auth {{ name }}.files/ta.key
+{% if openvpn_tls_auth %}
+tls-auth {{ openvpn_id }}.files/ta.key
 {% endif %}
 
 {% endif %}

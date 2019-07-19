@@ -1,5 +1,5 @@
-{% if net_with_prefix is defined %}
-ifconfig-push {{ net_with_prefix | ipaddr(client.ip_offset) | ipaddr('address') }} {{ net_with_prefix | ipaddr('netmask') }}
+{% if openvpn_net_with_prefix is defined %}
+ifconfig-push {{ openvpn_net_with_prefix | ipaddr(client.ip_offset) | ipaddr('address') }} {{ openvpn_net_with_prefix | ipaddr('netmask') }}
 {% else %}
 ifconfig-push {{ client.ip }} {{ mask }}
 {% endif %}

@@ -1,0 +1,31 @@
+- name: Setting up variables for easyrsa installation (1)
+  set_fact:
+    openvpn_easyrsa_download_url: "https://github.com/OpenVPN/easy-rsa/releases/download/v{{ openvpn_easyrsa_version }}/EasyRSA-unix-v{{ openvpn_easyrsa_version }}.tgz"
+    openvpn_easyrsa_install_dir: "{{ openvpn_pki_folder }}/easyrsa"
+
+- name: Setting up variables for easyrsa installation (2)
+  set_fact:
+    openvpn_easyrsa: "{{ openvpn_easyrsa_install_dir }}/easyrsa"
+
+- name: "Check easyrsa directory exists "
+  stat:
+    path: "{{ openvpn_easyrsa }}"
+  register: easyrsa_script_stat
+
+- name: Installing easyrsa
+  when: not easyrsa_script_stat.stat.exists
+  block:
+    - name: Creating easyrsa dir
+      file:
+        path: "{{ openvpn_easyrsa_install_dir }}"
+        mode: 0700
+        state: directory
+
+    - name: Download and extract easyrsa
+      unarchive:
+        remote_src: yes
+        src: "{{ openvpn_easyrsa_download_url }}"
+        dest: "{{ openvpn_easyrsa_install_dir }}"
+        extra_opts:
+          - "--strip-components"
+          - "1"

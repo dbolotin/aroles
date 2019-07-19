@@ -1,6 +1,6 @@
 ---
 - name: restart openvpn
   service:
-    name: "openvpn@{{ openvpn_service_name }}"
+    name: "openvpn@{{ openvpn_id }}"
     state: restarted
-  when: not openvpn_no_service
+  when: openvpn_service
