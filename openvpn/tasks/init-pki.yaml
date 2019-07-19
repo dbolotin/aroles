@@ -9,6 +9,12 @@
     state: directory
     mode: 0700
 
+- name: "Creating folder to store obfs4 obfuscation keys"
+  file:
+    path: "{{ openvpn_pki_folder }}/obfs4"
+    state: directory
+    mode: 0700
+
 - name: Ensure easyrsa installed
   import_tasks: install-easyrsa.yaml
   when: openvpn_easyrsa is not defined

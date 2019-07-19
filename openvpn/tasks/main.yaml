@@ -184,8 +184,7 @@
     setype: openvpn_port_t
     state: present
   when: openvpn_se_port is defined and openvpn_se_proto is defined
-  notify:
-    - restart openvpn
+  notify: restart openvpn
 
 - meta: flush_handlers
 
@@ -196,4 +195,74 @@
     state: started
   when: openvpn_service
 
+- name: Obfuscation
+  when: openvpn_obfs4_port is defined
+  block:
+    - name: Install obfs4proxy
+      package:
+        name: obfs4proxy
+        state: present
 
+    - name: Creating /var/lib/tor/pt_state/obfs4/ folder
+      file:
+        path: "/var/lib/tor/pt_state/obfs4-{{ openvpn_id }}"
+        state: directory
+        owner: "{{ openvpn_owner }}"
+        group: "{{ openvpn_group }}"
+        mode: 0700
+
+    - name: Creating environment file for obfuscation
+      copy:
+        dest: "/var/lib/tor/pt_state/obfs4-{{ openvpn_id }}/obfs4.config"
+        owner: "{{ openvpn_owner }}"
+        group: "{{ openvpn_group }}"
+        mode: 0600
+        content: |
+          TOR_PT_MANAGED_TRANSPORT_VER=1
+          TOR_PT_STATE_LOCATION=/var/lib/tor/pt_state/obfs4-{{ openvpn_id }}
+          TOR_PT_SERVER_TRANSPORTS=obfs4
+          TOR_PT_SERVER_BINDADDR=obfs4-0.0.0.0:{{ openvpn_obfs4_port }}
+          TOR_PT_ORPORT=127.0.0.1:{{ openvpn_port }}
+      notify: restart obfs4proxy
+
+    - name: Creating systemd service file
+      copy:
+        dest: "/etc/systemd/system/obfs4proxy-{{ openvpn_id }}.service"
+        owner: "{{ openvpn_owner }}"
+        group: "{{ openvpn_group }}"
+        mode: 0600
+        content: |
+          [Unit]
+          Description=obfs4proxy server for {{ openvpn_id }}
+
+          [Service]
+          EnvironmentFile=/var/lib/tor/pt_state/obfs4-{{ openvpn_id }}/obfs4.config
+          ExecStart=/usr/bin/obfs4proxy -enableLogging true -logLevelStr INFO
+
+          [Install]
+          WantedBy=multi-user.target
+      notify: restart obfs4proxy
+
+    - meta: flush_handlers
+
+    - name: Starting service
+      systemd:
+        name: "obfs4proxy-{{ openvpn_id }}.service"
+        state: started
+        enabled: yes
+
+    - name: Wait until the file /var/lib/tor/pt_state/obfs4-{{ openvpn_id }}/obfs4_bridgeline.txt is present before continuing
+      wait_for:
+        path: "/var/lib/tor/pt_state/obfs4-{{ openvpn_id }}/obfs4_bridgeline.txt"
+
+    - name: Reading obfs4_cert
+      shell: "cat /var/lib/tor/pt_state/obfs4-{{ openvpn_id }}/obfs4_bridgeline.txt | grep cert= | sed 's:.*cert::' | sed 's: .*::'"
+      register: cat_obfs4_crt
+      changed_when: False
+
+    - name: Saving obfs4 key into {{ openvpn_pki_folder }}/obfs4/{{ openvpn_id }} on the key server
+      copy:
+        dest: "{{ openvpn_pki_folder }}/obfs4/{{ openvpn_id }}"
+        content: "{{ cat_obfs4_crt.stdout }}"
+      delegate_to: "{{ openvpn_pki_host }}"
+      become: "{{ openvpn_pki_become }}"
