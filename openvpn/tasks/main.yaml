@@ -66,7 +66,7 @@
         ta_key: "{{ cat_ta_key_result.stdout }}"
       when: openvpn_tls_auth
 
-- when: not embed_keys
+- when: not openvpn_embed_keys
   block:
     - name: Calculating files to copy (1)
       set_fact:
@@ -167,7 +167,7 @@
     - name: Creating client configs
       template:
         src: "ccd.j2"
-        dest: "{{ openvpn_config_path }}/{{ openvpn_id }}-ccd/{{ client.name }}"
+        dest: "{{ openvpn_config_path }}/{{ openvpn_id }}-ccd/{{ client.id }}"
         owner: "{{ openvpn_owner }}"
         group: "{{ openvpn_group }}"
         mode: 0600
@@ -194,10 +194,6 @@
     name: "openvpn@{{ openvpn_id }}"
     enabled: yes
     state: started
-  when: not no_service
+  when: openvpn_service
 
-- name: Enabling OpenVPN connection
-  command: "systemctl enable openvpn@{{ openvpn_id }}"
-  changed_when: no
-  when: not no_service
 

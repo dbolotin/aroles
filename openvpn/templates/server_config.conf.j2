@@ -52,7 +52,7 @@ cipher {{ openvpn_cipher }}
 
 # iroutes (networks available through clients)
 {% for client in openvpn_clients %}
-# route through {{ client.name }}
+# route through {{ client.id }}
 {% if client.iroutes is defined %}
 {% for iroute in client.iroutes %}
 {% if iroute.net_with_prefix is defined %}
