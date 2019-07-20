@@ -119,15 +119,6 @@
         label: "{{ file_to_copy.to }}"
       notify: restart openvpn
 
-- name: Creating openvpn config
-  template:
-    src: "{{ openvpn_type }}_config.conf.j2"
-    dest: "{{ openvpn_config_path }}/{{ openvpn_id }}.{{ openvpn_extension }}"
-    owner: "{{ openvpn_owner }}"
-    group: "{{ openvpn_group }}"
-    mode: 0600
-  notify: restart openvpn
-
 - name: Creating up script files
   copy:
     dest: "{{ openvpn_config_path }}/{{ openvpn_id }}-up.sh"
@@ -171,16 +162,14 @@
       notify: restart openvpn
   when: openvpn_type == "server" and openvpn_clients is defined
 
-- name: Allow OpenVPN to listen on
-  seport:
-    ports: "{{ openvpn_se_port }}"
-    proto: "{{ openvpn_se_proto }}"
-    setype: openvpn_port_t
-    state: present
-  when: openvpn_se_port is defined and openvpn_se_proto is defined
+- name: Creating openvpn config
+  template:
+    src: "{{ openvpn_type }}_config.conf.j2"
+    dest: "{{ openvpn_config_path }}/{{ openvpn_id }}.{{ openvpn_extension }}"
+    owner: "{{ openvpn_owner }}"
+    group: "{{ openvpn_group }}"
+    mode: 0600
   notify: restart openvpn
-
-- meta: flush_handlers
 
 - name: Obfuscation
   when: openvpn_obfs4_port is defined
@@ -205,6 +194,17 @@
     - name: Client obfs4 service
       include_tasks: obfs4-client.yaml
       when: "openvpn_type == 'client'"
+
+- name: Allow OpenVPN to listen on
+  seport:
+    ports: "{{ openvpn_se_port }}"
+    proto: "{{ openvpn_se_proto }}"
+    setype: openvpn_port_t
+    state: present
+  when: openvpn_se_port is defined and openvpn_se_proto is defined
+  notify: restart openvpn
+
+- meta: flush_handlers
 
 - name: Start OpenVPN
   systemd:

@@ -1,5 +1,9 @@
 proto {{ openvpn_proto }}
 
+{% if openvpn_obfs4_key is defined %}
+#viscosity obfuscationkey {{ openvpn_obfs4_key }}
+{% endif %}
+
 {% if openvpn_dev is defined %}
 dev {{ openvpn_dev }}
 {% else %}
