@@ -5,21 +5,19 @@
   delegate_to: "{{ openvpn_pki_host }}"
   become: "{{ openvpn_pki_become }}"
 
-- set_fact:
-    null_char: "{{ '\x00' }}"
-
 - name: Creating proxy authorization file
   copy:
     dest: "{{ openvpn_config_path }}/obfs4-auth-{{ openvpn_id }}"
     owner: "{{ openvpn_owner }}"
     group: "{{ openvpn_group }}"
     mode: 0600
+    # Hack from the "On Client" section from here: https://hamy.io/post/000d/how-to-hide-obfuscate-any-traffic-using-obfs4/
     content: |
       cert={{obfs4_key.stdout}};iat-mode=
-      1
+      {{ openvpn_obfs4_iat_mode }}
   notify: restart openvpn
 
-- name: Creating environment file for obfuscation
+- name: Creating obfs4 service script
   copy:
     dest: "{{ openvpn_config_path }}/obfs4-service-{{ openvpn_id }}.sh"
     owner: "{{ openvpn_owner }}"

@@ -49,3 +49,6 @@ openvpn_embed_keys: yes
 
 # Whether to create, start and enable corresponding systemd service
 openvpn_service: yes
+
+# See some description here https://lists.torproject.org/pipermail/tor-project/2016-November/000776.html
+openvpn_obfs4_iat_mode: 1

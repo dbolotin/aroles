@@ -9,6 +9,7 @@ dev-type {{ openvpn_device_type }}
 
 {% if openvpn_obfs4_port is defined %}
 remote {{ openvpn_host }} {{ openvpn_obfs4_port }}
+# Will be provided by obfs4 service script
 config obfs4-{{ openvpn_id }}.conf
 {% else %}
 remote {{ openvpn_host }} {{ openvpn_port }}

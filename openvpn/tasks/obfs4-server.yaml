@@ -10,6 +10,7 @@
       TOR_PT_SERVER_TRANSPORTS=obfs4
       TOR_PT_SERVER_BINDADDR=obfs4-0.0.0.0:{{ openvpn_obfs4_port }}
       TOR_PT_ORPORT=127.0.0.1:{{ openvpn_port }}
+      TOR_PT_SERVER_TRANSPORT_OPTIONS="obfs4:iat-mode={{ openvpn_obfs4_iat_mode }}"
   notify: restart obfs4proxy
 
 - name: Creating systemd service file

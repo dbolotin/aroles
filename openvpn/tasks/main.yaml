@@ -119,11 +119,6 @@
         label: "{{ file_to_copy.to }}"
       notify: restart openvpn
 
-#- when: not openvpn_embed_keys
-#  block: openvpn_obfs4_port is defined
-#    - name: Setting localhost as
-
-
 - name: Creating openvpn config
   template:
     src: "{{ openvpn_type }}_config.conf.j2"
