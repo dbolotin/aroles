@@ -7,7 +7,12 @@ dev {{ openvpn_device_type }}
 {% endif %}
 dev-type {{ openvpn_device_type }}
 
+{% if openvpn_obfs4_port is defined %}
+remote {{ openvpn_host }} {{ openvpn_obfs4_port }}
+config obfs4-{{ openvpn_id }}.conf
+{% else %}
 remote {{ openvpn_host }} {{ openvpn_port }}
+{% endif %}
 
 resolv-retry infinite
 
@@ -41,7 +46,7 @@ log-append /var/log/openvpn-{{ openvpn_id }}.log
 
 verb 3
 
-{% if embed_keys %}
+{% if openvpn_embed_keys %}
 
 <ca>
 {{ ca_crt }}

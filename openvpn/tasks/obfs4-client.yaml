@@ -1,0 +1,67 @@
+- name: Reading
+  shell: cat "/{{ openvpn_pki_folder }}/obfs4/{{ openvpn_obfs4_key_id }}"
+  register: obfs4_key
+  changed_when: False
+  delegate_to: "{{ openvpn_pki_host }}"
+  become: "{{ openvpn_pki_become }}"
+
+- set_fact:
+    null_char: "{{ '\x00' }}"
+
+- name: Creating proxy authorization file
+  copy:
+    dest: "{{ openvpn_config_path }}/obfs4-auth-{{ openvpn_id }}"
+    owner: "{{ openvpn_owner }}"
+    group: "{{ openvpn_group }}"
+    mode: 0600
+    content: |
+      cert={{obfs4_key.stdout}};iat-mode=
+      1
+  notify: restart openvpn
+
+- name: Creating environment file for obfuscation
+  copy:
+    dest: "{{ openvpn_config_path }}/obfs4-service-{{ openvpn_id }}.sh"
+    owner: "{{ openvpn_owner }}"
+    group: "{{ openvpn_group }}"
+    mode: 0700
+    content: |
+      #!/bin/bash
+
+      export TOR_PT_CLIENT_TRANSPORTS=obfs4
+      export TOR_PT_STATE_LOCATION="/var/lib/tor/pt_state/obfs4-{{ openvpn_id }}"
+      export TOR_PT_MANAGED_TRANSPORT_VER=1
+
+      obfs4proxy -enableLogging true -logLevelStr INFO | \
+      while read LINE; do
+        if [[ ${LINE} == *"socks5"* ]]; then
+          port=$(echo ${LINE} | sed 's/.*://')
+          echo socks-proxy 127.0.0.1 ${port} obfs4-auth-{{ openvpn_id }} > {{ openvpn_config_path }}/obfs4-{{ openvpn_id }}.conf
+        fi
+      done
+  notify: restart obfs4proxy
+
+- name: Creating systemd service file
+  copy:
+    dest: "/etc/systemd/system/obfs4proxy-{{ openvpn_id }}.service"
+    owner: "{{ openvpn_owner }}"
+    group: "{{ openvpn_group }}"
+    mode: 0600
+    content: |
+      [Unit]
+      Description=obfs4proxy for {{ openvpn_id }}
+
+      [Service]
+      ExecStart={{ openvpn_config_path }}/obfs4-service-{{ openvpn_id }}.sh
+
+      [Install]
+      WantedBy=multi-user.target
+  notify: restart obfs4proxy
+
+- meta: flush_handlers
+
+- name: Starting service
+  systemd:
+    name: "obfs4proxy-{{ openvpn_id }}.service"
+    state: started
+    enabled: yes
