@@ -10,18 +10,16 @@
       delegate_to: "{{ openvpn_pki_host }}"
       become: "{{ openvpn_pki_become }}"
 
-- name: "Creating {{ openvpn_type }} keys for common name {{ openvpn_id }}"
-  command: "{{ openvpn_easyrsa }} build-{{ openvpn_type }}-full {{ openvpn_id }} nopass"
-  args:
-    chdir: "{{ openvpn_pki_folder }}"
-    creates: "{{ openvpn_pki_folder }}/pki/private/{{ openvpn_id }}.key"
-  delegate_to: "{{ openvpn_pki_host }}"
-  become: "{{ openvpn_pki_become }}"
-
-- name: Reading keys
-  delegate_to: "{{ openvpn_pki_host }}"
+- delegate_to: "{{ openvpn_pki_host }}"
   become: "{{ openvpn_pki_become }}"
   block:
+
+    - name: "Creating {{ openvpn_type }} keys for common name {{ openvpn_id }}"
+      command: "{{ openvpn_easyrsa }} build-{{ openvpn_type }}-full {{ openvpn_id }} nopass"
+      args:
+        chdir: "{{ openvpn_pki_folder }}"
+        creates: "{{ openvpn_pki_folder }}/pki/private/{{ openvpn_id }}.key"
+
     - name: Reading {{ openvpn_id }}.key
       shell: cat "/{{openvpn_pki_folder}}/pki/private/{{openvpn_id}}.key"
       register: cat_key_result
@@ -74,25 +72,11 @@
 
     - name: Calculating files to copy (2)
       set_fact:
-        files_to_copy_dh:
-          - from: "{{ dh }}"
-            to: "dh.pem"
-      when: "openvpn_type == 'server'"
-
-    - name: Calculating files to copy (3)
-      set_fact:
         files_to_copy: |
           {{ files_to_copy }} + {{ [{ "content": dh, "to": "dh.pem" }] }}
       when: "openvpn_type == 'server'"
 
-    - name: Calculating files to copy (4)
-      set_fact:
-        files_to_copy_ta:
-          - content: "{{ ta_key }}"
-            to: "ta.key"
-      when: openvpn_tls_auth
-
-    - name: Calculating files to copy (5)
+    - name: Calculating files to copy (3)
       set_fact:
         files_to_copy: |
           {{ files_to_copy }} + {{ [{ "content": ta_key, "to": "ta.key" }] }}
@@ -140,6 +124,7 @@
   notify: restart openvpn
 
 - name: Creating client-config directory for server config
+  when: openvpn_type == "server" and openvpn_clients is defined
   block:
     - name: Creating folder
       file:
@@ -160,7 +145,6 @@
       loop_control:
         loop_var: client
       notify: restart openvpn
-  when: openvpn_type == "server" and openvpn_clients is defined
 
 - name: Creating openvpn config
   template:
@@ -206,7 +190,7 @@
 
 - meta: flush_handlers
 
-- name: Start OpenVPN
+- name: Enable OpenVPN service
   systemd:
     name: "openvpn@{{ openvpn_id }}"
     enabled: yes
