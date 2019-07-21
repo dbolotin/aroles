@@ -24,7 +24,7 @@ openvpn_pki_host: localhost
 # Should we generate keys with "sudo"
 openvpn_pki_become: no
 
-openvpn_easyrsa_version:  "3.0.7"
+openvpn_easyrsa_version:  "3.0.6"
 
 # OpenVPN config
 openvpn_keepalive_ping: 10

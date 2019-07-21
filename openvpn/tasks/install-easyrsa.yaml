@@ -5,11 +5,11 @@
 
 - name: Setting up variables for easyrsa installation (2)
   set_fact:
-    openvpn_easyrsa: "{{ openvpn_easyrsa_install_dir }}/easyrsa"
+    _openvpn_easyrsa: "{{ openvpn_easyrsa_install_dir }}/easyrsa"
 
 - name: "Check easyrsa directory exists "
   stat:
-    path: "{{ openvpn_easyrsa }}"
+    path: "{{ _openvpn_easyrsa }}"
   register: easyrsa_script_stat
 
 - name: Installing easyrsa
@@ -29,3 +29,7 @@
         extra_opts:
           - "--strip-components"
           - "1"
+
+- name: Setting up variables for easyrsa installation (2)
+  set_fact:
+    openvpn_easyrsa: "{{ _openvpn_easyrsa }}"
