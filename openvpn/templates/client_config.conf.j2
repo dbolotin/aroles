@@ -2,6 +2,8 @@ proto {{ openvpn_proto }}
 
 {% if openvpn_obfs4_key is defined %}
 #viscosity obfuscationkey {{ openvpn_obfs4_key }}
+#viscosity obfuscation obfs4
+#viscosity dnsdomain some.domain.com
 {% endif %}
 
 {% if openvpn_dev is defined %}
@@ -13,8 +15,10 @@ dev-type {{ openvpn_device_type }}
 
 {% if openvpn_obfs4_port is defined %}
 remote {{ openvpn_host }} {{ openvpn_obfs4_port }}
+{% if openvpn_service %}
 # Will be provided by obfs4 service script
 config obfs4-{{ openvpn_id }}.conf
+{% endif %}
 {% else %}
 remote {{ openvpn_host }} {{ openvpn_port }}
 {% endif %}

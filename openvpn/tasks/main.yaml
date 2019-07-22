@@ -146,15 +146,6 @@
         loop_var: client
       notify: restart openvpn
 
-- name: Creating openvpn config
-  template:
-    src: "{{ openvpn_type }}_config.conf.j2"
-    dest: "{{ openvpn_config_path }}/{{ openvpn_id }}.{{ openvpn_extension }}"
-    owner: "{{ openvpn_owner }}"
-    group: "{{ openvpn_group }}"
-    mode: 0600
-  notify: restart openvpn
-
 - name: Obfuscation
   when: openvpn_obfs4_port is defined
   block:
@@ -162,6 +153,7 @@
       package:
         name: obfs4proxy
         state: present
+      when: openvpn_service
 
     - name: Creating /var/lib/tor/pt_state/obfs4/ folder
       file:
@@ -170,14 +162,24 @@
         owner: "{{ openvpn_owner }}"
         group: "{{ openvpn_group }}"
         mode: 0700
+      when: openvpn_service
 
     - name: Server obfs4 service
       include_tasks: obfs4-server.yaml
-      when: "openvpn_type == 'server'"
+      when: "openvpn_type == 'server' and openvpn_service"
 
     - name: Client obfs4 service
       include_tasks: obfs4-client.yaml
       when: "openvpn_type == 'client'"
+
+- name: Creating openvpn config
+  template:
+    src: "{{ openvpn_type }}_config.conf.j2"
+    dest: "{{ openvpn_config_path }}/{{ openvpn_id }}.{{ openvpn_extension }}"
+    owner: "{{ openvpn_owner }}"
+    group: "{{ openvpn_group }}"
+    mode: 0600
+  notify: restart openvpn
 
 - name: Allow OpenVPN to listen on
   seport:
