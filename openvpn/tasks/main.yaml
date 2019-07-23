@@ -36,17 +36,22 @@
       register: cat_ca_crt_result
       changed_when: False
 
-    - name: Reading dh.pem
-      shell: cat "/{{openvpn_pki_folder}}/pki/dh.pem"
-      register: cat_dh_result
-      changed_when: False
-
     - name: Setting variables
       set_fact:
         config_key: "{{ cat_key_result.stdout }}"
         config_crt: "{{ cat_crt_result.stdout }}"
         ca_crt: "{{ cat_ca_crt_result.stdout }}"
+
+    - name: Reading dh.pem
+      shell: cat "/{{openvpn_pki_folder}}/pki/dh.pem"
+      register: cat_dh_result
+      changed_when: False
+      when: "openvpn_type == 'server'"
+
+    - name: Setting variables
+      set_fact:
         dh: "{{ cat_dh_result.stdout }}"
+      when: "openvpn_type == 'server'"
 
     - name: Reading ta.key
       shell: cat "/{{openvpn_pki_folder}}/ta.key"
@@ -146,6 +151,11 @@
       loop_control:
         loop_var: client
       notify: restart openvpn
+
+- name: Clean obfs4 variables from previous run
+  set_fact:
+    openvpn_obfs4_key: ""
+  when: openvpn_obfs4_port is not defined
 
 - name: Obfuscation
   when: openvpn_obfs4_port is defined

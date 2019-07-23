@@ -1,6 +1,6 @@
 proto {{ openvpn_proto }}
 
-{% if openvpn_obfs4_key is defined %}
+{% if openvpn_obfs4_key is defined and openvpn_obfs4_key != "" %}
 #viscosity obfuscationkey {{ openvpn_obfs4_key }}
 #viscosity obfuscation obfs4
 #viscosity dnsdomain some.domain.com
