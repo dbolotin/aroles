@@ -2,6 +2,7 @@
   package:
     name: openvpn
     state: present
+  when: openvpn_service
 
 - name: Ensure PKI initialized
   include_tasks: init-pki.yaml

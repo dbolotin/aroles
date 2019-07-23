@@ -26,6 +26,8 @@ openvpn_pki_become: no
 
 openvpn_easyrsa_version:  "3.0.6"
 
+openvpn_skip_init: no
+
 # OpenVPN config
 openvpn_keepalive_ping: 10
 openvpn_keepalive_timeout: 120

@@ -26,6 +26,7 @@
             exit 0
           }
 
+          # Saving our PID, because while loop body invoked in a separate process, while systemd-notify requires root process PID
           SERVICE_PID=$$
 
           trap "cleanup;" SIGINT SIGHUP SIGTERM
