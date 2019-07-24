@@ -1,0 +1,13 @@
+- name: restart obfs4proxy
+  systemd:
+    name: "obfs4proxy-{{ openvpn_id }}.service"
+    daemon_reload: yes
+    state: restarted
+  when: openvpn_obfs4_port is defined
+
+- name: restart openvpn
+  systemd:
+    name: "openvpn@{{ openvpn_id }}"
+    daemon_reload: yes
+    state: restarted
+  when: openvpn_service

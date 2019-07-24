@@ -1,0 +1,88 @@
+- name: Reading obfs4 key
+  shell: cat "/{{ openvpn_pki_folder }}/obfs4/{{ openvpn_obfs4_key_id }}"
+  register: obfs4_key
+  changed_when: False
+  delegate_to: "{{ openvpn_pki_host }}"
+  become: "{{ openvpn_pki_become }}"
+
+- name: Setting openvpn_obfs4_key
+  set_fact:
+    openvpn_obfs4_key: "{{ obfs4_key.stdout }}"
+
+- when: openvpn_service
+  block:
+    - name: Creating obfs4 service script
+      copy:
+        dest: "{{ openvpn_config_path }}/obfs4-service-{{ openvpn_id }}.sh"
+        owner: "{{ openvpn_owner }}"
+        group: "{{ openvpn_group }}"
+        mode: 0700
+        content: |
+          #!/bin/bash
+
+          function cleanup() {
+            echo "exiting"
+            rm {{ openvpn_config_path }}/obfs4-{{ openvpn_id }}.conf
+            exit 0
+          }
+
+          # Saving our PID, because while loop body invoked in a separate process, while systemd-notify requires root process PID
+          SERVICE_PID=$$
+
+          trap "cleanup;" SIGINT SIGHUP SIGTERM
+
+          export TOR_PT_CLIENT_TRANSPORTS=obfs4
+          export TOR_PT_STATE_LOCATION="/var/lib/tor/pt_state/obfs4-{{ openvpn_id }}"
+          export TOR_PT_MANAGED_TRANSPORT_VER=1
+          export TOR_PT_EXIT_ON_STDIN_CLOSE="1"
+
+          tail -f /dev/null | obfs4proxy -enableLogging true -logLevelStr INFO | \
+          while read LINE; do
+            if [[ ${LINE} == *"socks5"* ]]; then
+              port=$(echo ${LINE} | sed 's/.*://')
+              echo socks-proxy 127.0.0.1 ${port} obfs4-auth-{{ openvpn_id }} > {{ openvpn_config_path }}/obfs4-{{ openvpn_id }}.conf
+              systemd-notify --ready --status "Ready" --pid=${SERVICE_PID}
+            fi
+          done
+      notify: restart obfs4proxy
+
+    - name: Creating systemd service file
+      copy:
+        dest: "/etc/systemd/system/obfs4proxy-{{ openvpn_id }}.service"
+        owner: "{{ openvpn_owner }}"
+        group: "{{ openvpn_group }}"
+        mode: 0600
+        content: |
+          [Unit]
+          Description=obfs4proxy for {{ openvpn_id }}
+
+          [Service]
+          Type=notify
+          ExecStart={{ openvpn_config_path }}/obfs4-service-{{ openvpn_id }}.sh
+          TimeoutStartSec=120s
+          RestartSec=5s
+          Restart=always
+
+          [Install]
+          RequiredBy=openvpn@{{ openvpn_id }}.service
+      notify: restart obfs4proxy
+
+    - name: Creating proxy authorization file
+      copy:
+        dest: "{{ openvpn_config_path }}/obfs4-auth-{{ openvpn_id }}"
+        owner: "{{ openvpn_owner }}"
+        group: "{{ openvpn_group }}"
+        mode: 0600
+        # Hack from the "On Client" section from here: https://hamy.io/post/000d/how-to-hide-obfuscate-any-traffic-using-obfs4/
+        content: |
+          cert={{openvpn_obfs4_key}};iat-mode=
+          {{ openvpn_obfs4_iat_mode }}
+      notify: restart openvpn
+
+    - meta: flush_handlers
+
+    - name: Enabling obfs4proxy service
+      systemd:
+        name: "obfs4proxy-{{ openvpn_id }}.service"
+        state: started
+        enabled: yes

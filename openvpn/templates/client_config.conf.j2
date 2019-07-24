@@ -1,0 +1,88 @@
+proto {{ openvpn_proto }}
+
+{% if openvpn_obfs4_key is defined and openvpn_obfs4_key != "" %}
+#viscosity obfuscationkey {{ openvpn_obfs4_key }}
+#viscosity obfuscation obfs4
+#viscosity dnsdomain some.domain.com
+{% endif %}
+
+{% if openvpn_dev is defined %}
+dev {{ openvpn_dev }}
+{% else %}
+dev {{ openvpn_device_type }}
+{% endif %}
+dev-type {{ openvpn_device_type }}
+
+{% if openvpn_obfs4_port is defined %}
+remote {{ openvpn_host }} {{ openvpn_obfs4_port }}
+{% if openvpn_service %}
+# Will be provided by obfs4 service script
+config obfs4-{{ openvpn_id }}.conf
+{% endif %}
+{% else %}
+remote {{ openvpn_host }} {{ openvpn_port }}
+{% endif %}
+
+resolv-retry infinite
+
+client
+tls-client
+remote-cert-tls server
+
+nobind
+
+ncp-disable
+
+persist-key
+persist-tun
+
+cipher {{ openvpn_cipher }}
+
+{% if openvpn_up_script is defined or openvpn_down_script is defined %}
+script-security 2
+{% endif %}
+
+{% if openvpn_up_script is defined %}
+up ./{{ openvpn_id }}-up.sh
+{% endif %}
+
+{% if openvpn_down_script is defined %}
+down ./{{ openvpn_id }}-down.sh
+{% endif %}
+
+status /var/log/openvpn-{{ openvpn_id }}.status
+log-append /var/log/openvpn-{{ openvpn_id }}.log
+
+verb 3
+
+{% if openvpn_embed_keys %}
+
+<ca>
+{{ ca_crt }}
+</ca>
+
+<cert>
+{{ config_crt }}
+</cert>
+
+<key>
+{{ config_key }}
+</key>
+
+{% if openvpn_tls_auth %}
+<tls-auth>
+{{ ta_key }}
+</tls-auth>
+{% endif %}
+
+{% else %}
+
+ca {{ openvpn_id }}.files/ca.crt
+cert {{ openvpn_id }}.files/{{ openvpn_id }}.crt
+key {{ openvpn_id }}.files/{{ openvpn_id }}.key
+
+{% if openvpn_tls_auth %}
+tls-auth {{ openvpn_id }}.files/ta.key
+{% endif %}
+
+{% endif %}

@@ -1,0 +1,53 @@
+- name: Initialization
+  when: not openvpn_skip_init
+  block:
+
+    - name: Checking openvpn installed
+      package:
+        name: openvpn
+        state: present
+
+    - name: "Creating folder for OpenVPN PKI"
+      file:
+        path: "{{ openvpn_pki_folder }}"
+        state: directory
+        mode: 0700
+
+    - name: "Creating folder to store obfs4 obfuscation keys"
+      file:
+        path: "{{ openvpn_pki_folder }}/obfs4"
+        state: directory
+        mode: 0700
+
+- name: Ensure easyrsa installed
+  import_tasks: install-easyrsa.yaml
+  when: openvpn_easyrsa is not defined
+
+- name: Initialization
+  when: not openvpn_skip_init
+  block:
+
+    - name: "Creating ta.key"
+      command: "openvpn --genkey --secret ta.key"
+      args:
+        chdir: "{{ openvpn_pki_folder }}"
+        creates: "{{ openvpn_pki_folder }}/ta.key"
+      when: openvpn_tls_auth
+
+    - name: "Init PKI"
+      command: "{{ openvpn_easyrsa }} init-pki"
+      args:
+        chdir: "{{ openvpn_pki_folder }}"
+        creates: "{{ openvpn_pki_folder }}/pki"
+
+    - name: "Building CA"
+      command: "{{ openvpn_easyrsa }} --batch build-ca nopass"
+      args:
+        chdir: "{{ openvpn_pki_folder }}"
+        creates: "{{ openvpn_pki_folder }}/pki/ca.crt"
+
+    - name: "Creating dh.pem [this may take several minutes]"
+      command: "{{ openvpn_easyrsa }} gen-dh"
+      args:
+        chdir: "{{ openvpn_pki_folder }}"
+        creates: "{{ openvpn_pki_folder }}/pki/dh.pem"

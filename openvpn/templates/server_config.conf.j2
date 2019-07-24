@@ -1,0 +1,153 @@
+proto {{ openvpn_proto }}
+
+{% if openvpn_dev is defined %}
+dev {{ openvpn_dev }}
+{% else %}
+dev {{ openvpn_device_type }}
+{% endif %}
+dev-type {{ openvpn_device_type }}
+
+multihome
+
+port {{ openvpn_port }}
+
+mode server
+tls-server
+remote-cert-tls client
+
+{% if openvpn_device_type == "tun" %}
+topology subnet
+push "topology subnet"
+{% endif %}
+
+{% if openvpn_net_with_prefix is defined %}
+ifconfig {{ openvpn_net_with_prefix | ipaddr(openvpn_ip_offset) | ipaddr('address') }} {{ openvpn_net_with_prefix | ipaddr('netmask') }}
+{% else %}
+ifconfig {{ openvpn_ip }} {{ openvpn_mask }}
+{% endif %}
+{% if openvpn_pool is defined %}
+{% if openvpn_net_with_prefix is defined %}
+ifconfig-pool {{ openvpn_net_with_prefix | ipaddr(openvpn_pool.from_offset) | ipaddr('address') }} {{ openvpn_net_with_prefix | ipaddr(openvpn_pool.to_offset) | ipaddr('address') }}
+{% else %}
+ifconfig-pool {{ openvpn_pool.from }} {{ openvpn_pool.to }}
+{% endif %}
+ifconfig-pool-persist {{ openvpn_id }}-ifconfig-persist {{ openvpn_pool_persist_timeout }}
+{% endif %}
+
+{% if openvpn_push_def1 %}
+push "redirect-gateway def1"
+{% endif %}
+
+{% if openvpn_client_to_client %}
+client-to-client
+{% endif %}
+
+push "route-gateway {{ (openvpn_net_with_prefix | ipaddr(openvpn_ip_offset) | ipaddr('address')) if openvpn_net_with_prefix is defined else openvpn_ip }}"
+
+# Disable Negotiable Crypto Parameters (NCP)
+ncp-disable
+cipher {{ openvpn_cipher }}
+
+{% if openvpn_clients is defined %}
+
+# iroutes (networks available through clients)
+{% for client in openvpn_clients %}
+# route through {{ client.id }}
+{% if client.iroutes is defined %}
+{% for iroute in client.iroutes %}
+{% if iroute.net_with_prefix is defined %}
+route {{ iroute.net_with_prefix | ipaddr('network') }} {{ iroute.net_with_prefix | ipaddr('netmask') }} {{ (openvpn_net_with_prefix | ipaddr(client.ip_offset) | ipaddr('address')) if openvpn_net_with_prefix is defined else client.ip }}
+{% else %}
+route {{ iroute.net }} {{ iroute.mask }} {{ (openvpn_net_with_prefix | ipaddr(client.ip_offset) | ipaddr('address')) if openvpn_net_with_prefix is defined else client.ip }}
+{% endif %}
+{% endfor %}
+{% endif %}
+{% endfor %}
+
+client-config-dir {{ openvpn_id }}-ccd
+
+{% endif %}
+
+{% if openvpn_push is defined %}
+{% for push_item in openvpn_push %}
+push "{{ push_item }}"
+{% endfor %}
+{% endif %}
+
+{% if openvpn_push_routes is defined %}
+
+# route pushes (networks available for clients through this vpn)
+{% for push_route in openvpn_push_routes %}
+{% if push_route.comment is defined %}
+# {{ push_route.comment }}
+{% endif %}
+{% if push_route.net_with_prefix is defined %}
+push "route {{ push_route.net_with_prefix | ipaddr('network') }} {{ push_route.net_with_prefix | ipaddr('netmask') }}"
+{% else %}
+push "route {{ push_route.net }} {{ push_route.mask }}"
+{% endif %}
+{% endfor %}
+
+{% endif %}
+
+keepalive {{ openvpn_keepalive_ping }} {{ openvpn_keepalive_timeout }}
+
+persist-key
+persist-tun
+
+{% if openvpn_up_script is defined or openvpn_down_script is defined %}
+script-security 2
+{% endif %}
+
+{% if openvpn_up_script is defined %}
+up ./{{ openvpn_id }}-up.sh
+{% endif %}
+
+{% if openvpn_down_script is defined %}
+down ./{{ openvpn_id }}-down.sh
+{% endif %}
+
+status /var/log/openvpn-{{ openvpn_id }}.status
+log-append /var/log/openvpn-{{ openvpn_id }}.log
+
+verb 3
+
+{% if openvpn_embed_keys %}
+
+<ca>
+{{ ca_crt }}
+</ca>
+
+<cert>
+{{ config_crt }}
+</cert>
+
+<key>
+{{ config_key }}
+</key>
+
+{% if openvpn_tls_auth %}
+<tls-auth>
+{{ ta_key }}
+</tls-auth>
+{% endif %}
+
+<dh>
+{{ dh }}
+</dh>
+
+{% else %}
+
+ca {{ openvpn_id }}.files/ca.crt
+
+cert {{ openvpn_id }}.files/{{ openvpn_id }}.crt
+
+key {{ openvpn_id }}.files/{{ openvpn_id }}.key
+
+{% if openvpn_tls_auth %}
+tls-auth {{ openvpn_id }}.files/ta.key
+{% endif %}
+
+dh {{ openvpn_id }}.files/dh.pem
+
+{% endif %}
