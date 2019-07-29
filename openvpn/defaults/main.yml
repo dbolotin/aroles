@@ -40,8 +40,8 @@ openvpn_client_to_client: no
 
 # Output config settings
 openvpn_config_path: /etc/openvpn/
-openvpn_owner: root
-openvpn_group: root
+openvpn_owner: "{{ omit }}"
+openvpn_group: "{{ omit }}"
 
 # Config file extension (file name suffix)
 openvpn_extension: conf
