@@ -64,6 +64,37 @@
         ta_key: "{{ cat_ta_key_result.stdout }}"
       when: openvpn_tls_auth
 
+- name: Clean obfs4 variables from previous run
+  set_fact:
+    openvpn_obfs4_key: ""
+  when: openvpn_obfs4_port is not defined
+
+- name: Obfuscation
+  when: openvpn_obfs4_port is defined
+  block:
+    - name: Install obfs4proxy
+      package:
+        name: obfs4proxy
+        state: present
+      when: openvpn_service
+
+    - name: Creating /var/lib/tor/pt_state/obfs4/ folder
+      file:
+        path: "/var/lib/tor/pt_state/obfs4-{{ openvpn_id }}"
+        state: directory
+        owner: "{{ openvpn_owner }}"
+        group: "{{ openvpn_group }}"
+        mode: 0700
+      when: openvpn_service
+
+    - name: Server obfs4 service
+      include_tasks: obfs4-server.yaml
+      when: "openvpn_type == 'server' and openvpn_service"
+
+    - name: Client obfs4 service
+      include_tasks: obfs4-client.yaml
+      when: "openvpn_type == 'client'"
+
 - when: not openvpn_embed_keys
   block:
     - name: Calculating files to copy (1)
@@ -132,7 +163,7 @@
 - name: Creating client-config directory for server config
   when: openvpn_type == "server" and openvpn_clients is defined
   block:
-    - name: Creating folder
+    - name: Creating folder for CCD configs
       file:
         path: "{{ openvpn_config_path }}/{{ openvpn_id }}-ccd"
         state: directory
@@ -140,7 +171,7 @@
         group: "{{ openvpn_group }}"
         mode: 0700
 
-    - name: Creating client configs
+    - name: Creating client specific configs
       template:
         src: "ccd.j2"
         dest: "{{ openvpn_config_path }}/{{ openvpn_id }}-ccd/{{ client.id }}"
@@ -151,37 +182,6 @@
       loop_control:
         loop_var: client
       notify: restart openvpn
-
-- name: Clean obfs4 variables from previous run
-  set_fact:
-    openvpn_obfs4_key: ""
-  when: openvpn_obfs4_port is not defined
-
-- name: Obfuscation
-  when: openvpn_obfs4_port is defined
-  block:
-    - name: Install obfs4proxy
-      package:
-        name: obfs4proxy
-        state: present
-      when: openvpn_service
-
-    - name: Creating /var/lib/tor/pt_state/obfs4/ folder
-      file:
-        path: "/var/lib/tor/pt_state/obfs4-{{ openvpn_id }}"
-        state: directory
-        owner: "{{ openvpn_owner }}"
-        group: "{{ openvpn_group }}"
-        mode: 0700
-      when: openvpn_service
-
-    - name: Server obfs4 service
-      include_tasks: obfs4-server.yaml
-      when: "openvpn_type == 'server' and openvpn_service"
-
-    - name: Client obfs4 service
-      include_tasks: obfs4-client.yaml
-      when: "openvpn_type == 'client'"
 
 - name: Creating openvpn config
   template:
