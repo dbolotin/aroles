@@ -160,6 +160,11 @@
   when: openvpn_down_script is defined
   notify: restart openvpn
 
+- name: Calculating log and status file names
+  set_fact:
+    c_openvpn_log_file_name: "{{ openvpn_log_file_name | default('/var/log/openvpn-' ~ openvpn_id ~ '.log') }}"
+    c_openvpn_status_file_name: "{{ openvpn_status_file_name | default('/var/log/openvpn-' ~ openvpn_id ~ '.status') }}"
+
 - name: Creating client-config directory for server config
   when: openvpn_type == "server" and openvpn_clients is defined
   block:

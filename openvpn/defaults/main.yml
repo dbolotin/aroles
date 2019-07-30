@@ -38,6 +38,14 @@ openvpn_tls_auth: yes
 openvpn_push_def1: no
 openvpn_client_to_client: no
 
+# Other settings
+openvpn_log_file: yes
+# For non-default log file name
+# openvpn_log_file_name:
+openvpn_status_file: yes
+# For non-default status file name
+# openvpn_status_file_name:
+
 # Output config settings
 openvpn_config_path: /etc/openvpn/
 openvpn_owner: "{{ omit }}"

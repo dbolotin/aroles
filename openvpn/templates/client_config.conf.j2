@@ -50,8 +50,12 @@ up ./{{ openvpn_id }}-up.sh
 down ./{{ openvpn_id }}-down.sh
 {% endif %}
 
-status /var/log/openvpn-{{ openvpn_id }}.status
-log-append /var/log/openvpn-{{ openvpn_id }}.log
+{% if openvpn_log_file %}
+log-append {{ c_openvpn_log_file_name }}
+{% endif %}
+{% if openvpn_status_file %}
+status {{ c_openvpn_status_file_name }}
+{% endif %}
 
 verb 3
 
