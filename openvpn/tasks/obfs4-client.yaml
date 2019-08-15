@@ -67,6 +67,8 @@
           RequiredBy=openvpn@{{ openvpn_id }}.service
       notify: restart obfs4proxy
 
+    - meta: flush_handlers
+
     - name: Creating proxy authorization file
       copy:
         dest: "{{ openvpn_config_path }}/obfs4-auth-{{ openvpn_id }}"
@@ -78,8 +80,6 @@
           cert={{openvpn_obfs4_key}};iat-mode=
           {{ openvpn_obfs4_iat_mode }}
       notify: restart openvpn
-
-    - meta: flush_handlers
 
     - name: Enabling obfs4proxy service
       systemd:
