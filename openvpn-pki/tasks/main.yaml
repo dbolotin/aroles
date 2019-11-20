@@ -16,7 +16,7 @@
   become: no
 
 - name: "Init PKI (ON LOCALHOST)"
-  command: "easyrsa init-pki"
+  command: "{{ openvpn_pki_folder }}/easyrsa/easyrsa init-pki"
   args:
     chdir: "{{ openvpn_pki_folder }}"
     creates: "{{ openvpn_pki_folder }}/pki"
@@ -24,7 +24,7 @@
   become: no
 
 - name: "Building CA (ON LOCALHOST)"
-  command: "easyrsa --batch build-ca nopass"
+  command: "{{ openvpn_pki_folder }}/easyrsa/easyrsa --batch build-ca nopass"
   args:
     chdir: "{{ openvpn_pki_folder }}"
     creates: "{{ openvpn_pki_folder }}/pki/ca.crt"
@@ -32,7 +32,7 @@
   become: no
 
 - name: "Creating dh.pem [this may take several minutes] (ON LOCALHOST)"
-  command: "easyrsa gen-dh"
+  command: "{{ openvpn_pki_folder }}/easyrsa/easyrsa gen-dh"
   args:
     chdir: "{{ openvpn_pki_folder }}"
     creates: "{{ openvpn_pki_folder }}/pki/dh.pem"

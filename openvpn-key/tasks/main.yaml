@@ -4,7 +4,7 @@
     name: openvpn-pki
 
 - name: "Creating {{ type }} keys for common name {{ name }} (ON LOCALHOST)"
-  command: "easyrsa build-{{ type }}-full {{ name }} nopass"
+  command: "{{ openvpn_pki_folder }}/easyrsa/easyrsa build-{{ type }}-full {{ name }} nopass"
   args:
     chdir: "{{ openvpn_pki_folder }}"
     creates: "{{ openvpn_pki_folder }}/pki/private/{{ name }}.key"
