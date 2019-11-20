@@ -12,7 +12,7 @@
     state: directory
 
 - name: Creating nginx reverse proxy and letsencrypt helper
-  docker_service:
+  docker_compose:
     project_name: web
     definition:
       version: "3.5"
@@ -45,6 +45,7 @@
 
       networks:
         main:
+          #          name: "{{ docker_network_name | default( 'web_main' ) }}"
           driver: bridge
           driver_opts:
             com.docker.network.bridge.name: "docker-web"
